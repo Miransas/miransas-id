@@ -1,0 +1,1 @@
+print("API initialized Miransas ID")
