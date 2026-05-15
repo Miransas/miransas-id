@@ -1,0 +1,59 @@
+Miransas ID - Teknik Blueprint (Özet & Kayıt)
+1. Proje Mimarisi ve Klasör Yapısı
+Proje, Clean Architecture prensiplerine uygun olarak şu şekilde yapılandırıldı:
+
+src/core/: Ayarlar (config.py) ve Güvenlik/JWT (security.py).
+
+src/models/: SQLModel (SQLAlchemy) tabloları. Kullanıcı rank ve badge bilgileri burada.
+
+src/schemas/: Pydantic veri doğrulamaları. Giriş/çıkış verilerini filtreler.
+
+src/services/: İş mantığı (Kullanıcı kaydı, şifre doğrulama).
+
+src/database/: Veri tabanı bağlantı motoru (session.py).
+
+src/api/v1/: Endpoint’ler (Router).
+
+2. Güvenlik Katmanı (Security)
+Hashing: Şifreler asla düz metin olarak tutulmaz. Argon2 algoritması ile hash'lenir.
+
+Authentication: Stateless (durumsuz) bir yapı için JWT (JSON Web Token) kullanılır.
+
+Encryption: HS256 algoritması ve Vercel/Environment üzerinden gelen bir SECRET_KEY ile tokenlar imzalanır.
+
+3. Kullanıcı ve Ekosistem Modeli
+Miransas projeleri arasında ortak bir kimlik oluşturmak için şu alanlar kritik:
+
+Miransas Ranks: Novice, Architect, Elite, Core Developer.
+
+Badges: Kullanıcının kazandığı başarıların tutulduğu dinamik bir JSON listesi.
+
+Verification: E-posta onay durumu (is_verified) ve hesap aktiflik durumu (is_active).
+
+4. Veri Tabanı Stratejisi
+SQLModel: SQLAlchemy'nin gücü ile Pydantic'in hızını birleştirir.
+
+Session Management: Dependency Injection (get_session) ile her istekte güvenli bağlantı açılıp kapanır.
+
+Engine: PostgreSQL (Neon/Vercel uyumlu) kullanılır.
+
+5. CI/CD ve Kalite Kontrol
+GitHub Actions: Her push işleminde otomatik test ve lint kontrolü yapar.
+
+Ruff: Python kodunu temizleyen ve hataları bulan modern "linter". (Şu an geliştirme kolaylığı için --exit-zero modunda).
+
+Test Service: CI sırasında geçici bir Docker-Postgres ayağa kalkar.
+
+6. Geliştirme Ortamı
+Python: Homebrew üzerinden kurulan 3.12+ sürümü.
+
+Venv: .venv klasörü içinde izole edilmiş kütüphaneler.
+
+Runner: uvicorn src.main:app --reload (Kod değiştikçe otomatik yenilenir).
+
+7. Roadmap (Sıradaki Adımlar)
+Auth Routes: /register ve /login endpoint'lerini tamamlamak.
+
+Database Migration: Tabloların gerçek DB'ye yansıtılması.
+
+Frontend Integration: Miransas ID'nin bir arayüze bağlanması.
