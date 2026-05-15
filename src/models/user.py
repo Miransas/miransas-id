@@ -19,7 +19,7 @@ class UserBase(SQLModel):
     # Miransas Ecosystem Data
     rank: MiransasRank = Field(default=MiransasRank.NOVICE)
     # JSON tipinde badge listesi: ["pull_shark", "early_adopter"]
-    badges: List[str] = Field(default=[], sa_column=Column(JSON))
+    badges: List[str] = Field(default_factory=list, sa_column=Column(JSON))
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

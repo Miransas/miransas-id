@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from src.models.user import MiransasRank
 
 # Ortak alanlar
@@ -8,7 +8,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     rank: MiransasRank = MiransasRank.NOVICE
-    badges: List[str] = []
+    badges: List[str] = Field(default_factory=list)
 
 # Kayıt olurken (Input)
 class UserCreate(UserBase):
