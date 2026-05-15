@@ -1,132 +1,281 @@
-# 🆔 Miransas ID (Central Authentication Node)
+# README.md
 
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+```markdown
+# Miransas ID
 
-**Miransas ID** is the centralized identity and access management (IAM) service for the **Miransas Ecosystem**. It provides a secure, unified authentication layer for high-performance projects including *binboi*, *miransas-chess*, and *Worktio*.
+Miransas ID is a modern identity and authentication infrastructure built for the Miransas ecosystem.
 
-Built with a focus on performance and security, Miransas ID ensures that every "node" in the ecosystem can verify users with minimal latency and maximum safety.
+The project is designed as a scalable backend foundation capable of supporting:
+- games
+- launchers
+- developer platforms
+- cloud services
+- public APIs
+- community systems
+- future Miransas products
 
----
-
-## 🚀 Features
-
-* **Unified Identity:** One account to access all Miransas software and services.
-* **Secure by Design:** Password hashing using **Argon2** and stateless authentication via **JWT**.
-* **Ecosystem Integration:** Built-in support for **Miransas Ranks** (Novice to Elite) and **Achievement Badges**.
-* **Performance:** Powered by **FastAPI** and **SQLModel** for high-concurrency handling.
-* **Scalability:** Microservice-ready architecture designed for cloud deployment.
+Instead of being a simple login/register API, Miransas ID is structured as a centralized ecosystem identity platform.
 
 ---
 
-## 📂 Project Structure & Roadmap
+# Features
 
-The project follows **Clean Architecture** principles to ensure maintainability and separation of concerns.
-
-```text
-miransas-id/
-├── src/
-│   ├── main.py             # Application Entry Point
-│   ├── api/                # Route Handlers & Dependencies
-│   ├── core/               # Security (JWT/Hash) & Configuration
-│   ├── models/             # Database Models (SQLModel)
-│   ├── schemas/            # Data Validation (Pydantic)
-│   ├── services/           # Business Logic
-│   └── database/           # Session & Engine Management
-├── tests/                  # Automated Test Suite
-└── .github/workflows/      # CI/CD Pipelines
-
-Anladım usta, hepsini tek bir profesyonel README.md dosyası içinde, projenin tüm detaylarını, klasör yapısını ve kurulum rehberini kapsayacak şekilde birleştirdim. GitHub profilinde tam bir "Engineered by Miransas" duruşu sergileyecek.
-
-İşte projenin ana dizinine yapıştıracağın o dosya:
-
-Markdown
-# 🆔 Miransas ID (Central Authentication Node)
-
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
-
-**Miransas ID** is the centralized identity and access management (IAM) service for the **Miransas Ecosystem**. It provides a secure, unified authentication layer for high-performance projects including *binboi*, *miransas-chess*, and *Worktio*.
-
-Built with a focus on performance and security, Miransas ID ensures that every "node" in the ecosystem can verify users with minimal latency and maximum safety.
+- Modern FastAPI backend
+- Clean Architecture structure
+- JWT Authentication
+- Argon2 password hashing
+- PostgreSQL support
+- SQLModel integration
+- Pydantic validation
+- CI/CD with GitHub Actions
+- Environment-based configuration
+- Versioned API structure
+- Ecosystem-ready account model
+- Rank & badge infrastructure
 
 ---
 
-## 🚀 Features
+# Tech Stack
 
-* **Unified Identity:** One account to access all Miransas software and services.
-* **Secure by Design:** Password hashing using **Argon2** and stateless authentication via **JWT**.
-* **Ecosystem Integration:** Built-in support for **Miransas Ranks** (Novice to Elite) and **Achievement Badges**.
-* **Performance:** Powered by **FastAPI** and **SQLModel** for high-concurrency handling.
-* **Scalability:** Microservice-ready architecture designed for cloud deployment.
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI |
+| Database | PostgreSQL |
+| ORM | SQLModel / SQLAlchemy |
+| Validation | Pydantic |
+| Authentication | JWT |
+| Password Hashing | Argon2 |
+| CI/CD | GitHub Actions |
+| Linting | Ruff |
+| Runtime | Uvicorn |
 
 ---
 
-## 📂 Project Structure & Roadmap
+# Project Structure
 
-The project follows **Clean Architecture** principles to ensure maintainability and separation of concerns.
+```txt
+src/
+├── core/
+│   ├── config.py
+│   └── security.py
+│
+├── models/
+│   └── user.py
+│
+├── schemas/
+│   └── auth.py
+│
+├── services/
+│   └── auth_service.py
+│
+├── database/
+│   └── session.py
+│
+├── api/
+│   └── v1/
+│       └── routes/
+│
+└── main.py
+```
 
-```text
-miransas-id/
-├── src/
-│   ├── main.py             # Application Entry Point
-│   ├── api/                # Route Handlers & Dependencies
-│   ├── core/               # Security (JWT/Hash) & Configuration
-│   ├── models/             # Database Models (SQLModel)
-│   ├── schemas/            # Data Validation (Pydantic)
-│   ├── services/           # Business Logic
-│   └── database/           # Session & Engine Management
-├── tests/                  # Automated Test Suite
-└── .github/workflows/      # CI/CD Pipelines
-🛠️ Tech Stack
-Framework: FastAPI
+---
 
-ORM/Models: SQLModel (SQLAlchemy + Pydantic)
+# Architecture Philosophy
 
-Database: PostgreSQL (Optimized for Neon/Vercel)
+Miransas ID follows Clean Architecture principles.
 
-Security: Argon2-cffi & python-jose (JWT)
+The project separates:
+- business logic
+- validation
+- database models
+- API layers
+- security systems
 
-Environment: Docker & Vercel
+This allows the backend to remain:
+- scalable
+- maintainable
+- modular
+- production-ready
 
-⚙️ Quick Start
-1. Prerequisites
-Python 3.12+ (Homebrew version recommended for macOS)
+---
 
-PostgreSQL instance
+# Security
 
-2. Installation & Setup
-Bash
-# Clone the repository
-git clone [https://github.com/sardorazimov/miransas-id.git](https://github.com/sardorazimov/miransas-id.git)
+Miransas ID uses modern authentication and security practices.
+
+## Password Security
+
+Passwords are hashed using:
+- Argon2
+
+Passwords are never stored in plain text.
+
+---
+
+## Authentication
+
+Authentication is based on:
+- JWT (JSON Web Token)
+- Stateless architecture
+
+Tokens are signed using:
+- HS256
+- SECRET_KEY
+- environment variables
+
+---
+
+# Planned Features
+
+The project is actively evolving.
+
+Planned systems include:
+- Refresh token rotation
+- OAuth providers
+- MFA / 2FA
+- Session management
+- Redis integration
+- Audit logs
+- Rate limiting
+- Public profiles
+- API keys
+- Developer dashboard
+- Reputation system
+- Ecosystem launcher integration
+
+---
+
+# Ecosystem Vision
+
+Miransas ID is intended to become the unified account infrastructure for all Miransas services and products.
+
+Future ecosystem integrations may include:
+- BinBoi
+- Lost Signal
+- future games
+- cloud services
+- launchers
+- developer platforms
+- community systems
+
+The project aims to provide a single identity layer across the entire ecosystem.
+
+---
+
+# Development Setup
+
+## Clone Repository
+
+```bash
+git clone https://github.com/Miransas/miransas-id.git
 cd miransas-id
+```
 
-# Setup virtual environment
-python3 -m venv .venv
+---
+
+## Create Virtual Environment
+
+```bash
+python -m venv .venv
 source .venv/bin/activate
+```
 
-# Install requirements
+---
+
+## Install Dependencies
+
+```bash
 pip install -r requirements.txt
-3. Environment Configuration
-Copy .env.example to .env and fill in your secrets (ensure .env is ignored by git):
+```
 
-Bash
-PROJECT_NAME="Miransas ID"
-SECRET_KEY="your-generated-hex-key"
-DATABASE_URL="your-postgres-connection-string"
-4. Run the Engine
-Bash
-export PYTHONPATH=$PYTHONPATH:.
+---
+
+## Run Development Server
+
+```bash
 uvicorn src.main:app --reload
-Check the live documentation at: http://127.0.0.1:8000/docs
+```
 
-🛡️ License & Contributions
-Licensed under the MIT License. As an open-source project under the Miransas umbrella, contributions are welcome via Pull Requests.
+---
 
-🌌 Developed by Miransas
-Designed for the next generation of software automation.
-Lead Architect: Sardor Azimov
+# API
+
+Current API structure:
+
+```txt
+/api/v1/
+```
+
+Planned endpoints:
+- /register
+- /login
+- /refresh
+- /me
+- /profile
+- /badges
+- /ranks
+
+---
+
+# CI/CD
+
+GitHub Actions is used for:
+- lint checks
+- automated testing
+- validation
+- workflow automation
+
+---
+
+# Documentation
+
+Future documentation plans:
+
+```txt
+docs/
+├── blueprint.md
+├── architecture.md
+├── auth-flow.md
+├── database.md
+├── roadmap.md
+└── api-reference.md
+```
+
+---
+
+# Current Status
+
+Current project state:
+- Backend foundation established
+- Security layer initialized
+- Database architecture prepared
+- Authentication infrastructure in progress
+
+The project is still under active development.
+
+---
+
+# Contributing
+
+Contributions, ideas, and feedback are welcome.
+
+Future contribution guidelines will be added as the project evolves.
+
+---
+
+# License
+
+This project is licensed under the MIT License.
+
+See the LICENSE file for more information.
+
+---
+
+# Author
+
+Created and maintained by Miransas.
+```
+
+---
+
+
