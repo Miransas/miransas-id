@@ -1,281 +1,156 @@
-# README.md
-
-```markdown
 # Miransas ID
 
-Miransas ID is a modern identity and authentication infrastructure built for the Miransas ecosystem.
+Miransas ID is a FastAPI based identity and authentication service for the Miransas ecosystem. It provides a foundation for shared accounts, JWT authentication, ranks, badges, and future product integrations.
 
-The project is designed as a scalable backend foundation capable of supporting:
-- games
-- launchers
-- developer platforms
-- cloud services
-- public APIs
-- community systems
-- future Miransas products
+## Features
 
-Instead of being a simple login/register API, Miransas ID is structured as a centralized ecosystem identity platform.
-
----
-
-# Features
-
-- Modern FastAPI backend
-- Clean Architecture structure
-- JWT Authentication
+- FastAPI application structure
+- Versioned API under `/api/v1`
+- SQLModel database models
 - Argon2 password hashing
-- PostgreSQL support
-- SQLModel integration
-- Pydantic validation
-- CI/CD with GitHub Actions
-- Environment-based configuration
-- Versioned API structure
-- Ecosystem-ready account model
-- Rank & badge infrastructure
+- JWT access tokens
+- Protected current-user endpoints
+- Rank and badge fields on user accounts
+- SQLite fallback for local development
+- PostgreSQL support through `DATABASE_URL`
 
----
-
-# Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | FastAPI |
-| Database | PostgreSQL |
-| ORM | SQLModel / SQLAlchemy |
-| Validation | Pydantic |
-| Authentication | JWT |
-| Password Hashing | Argon2 |
-| CI/CD | GitHub Actions |
-| Linting | Ruff |
-| Runtime | Uvicorn |
-
----
-
-# Project Structure
+## Project Structure
 
 ```txt
 src/
+├── api/
+│   ├── deps.py
+│   └── v1/
+│       ├── auth.py
+│       ├── health.py
+│       └── users.py
 ├── core/
 │   ├── config.py
 │   └── security.py
-│
-├── models/
-│   └── user.py
-│
-├── schemas/
-│   └── auth.py
-│
-├── services/
-│   └── auth_service.py
-│
 ├── database/
 │   └── session.py
-│
-├── api/
-│   └── v1/
-│       └── routes/
-│
+├── models/
+│   └── user.py
+├── schemas/
+│   ├── token.py
+│   └── user.py
+├── services/
+│   └── auth_service.py
 └── main.py
 ```
 
----
-
-# Architecture Philosophy
-
-Miransas ID follows Clean Architecture principles.
-
-The project separates:
-- business logic
-- validation
-- database models
-- API layers
-- security systems
-
-This allows the backend to remain:
-- scalable
-- maintainable
-- modular
-- production-ready
-
----
-
-# Security
-
-Miransas ID uses modern authentication and security practices.
-
-## Password Security
-
-Passwords are hashed using:
-- Argon2
-
-Passwords are never stored in plain text.
-
----
-
-## Authentication
-
-Authentication is based on:
-- JWT (JSON Web Token)
-- Stateless architecture
-
-Tokens are signed using:
-- HS256
-- SECRET_KEY
-- environment variables
-
----
-
-# Planned Features
-
-The project is actively evolving.
-
-Planned systems include:
-- Refresh token rotation
-- OAuth providers
-- MFA / 2FA
-- Session management
-- Redis integration
-- Audit logs
-- Rate limiting
-- Public profiles
-- API keys
-- Developer dashboard
-- Reputation system
-- Ecosystem launcher integration
-
----
-
-# Ecosystem Vision
-
-Miransas ID is intended to become the unified account infrastructure for all Miransas services and products.
-
-Future ecosystem integrations may include:
-- BinBoi
-- Lost Signal
-- future games
-- cloud services
-- launchers
-- developer platforms
-- community systems
-
-The project aims to provide a single identity layer across the entire ecosystem.
-
----
-
-# Development Setup
-
-## Clone Repository
+## Setup
 
 ```bash
-git clone https://github.com/Miransas/miransas-id.git
-cd miransas-id
-```
-
----
-
-## Create Virtual Environment
-
-```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-```
-
----
-
-## Install Dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
----
+Create a `.env` file for production-like settings:
 
-## Run Development Server
+```env
+SECRET_KEY=change-this-secret
+DATABASE_URL=postgresql://user:password@localhost:5432/miransas_id
+```
+
+For local experiments, the app can run without `.env`; it falls back to SQLite.
+
+## Run
 
 ```bash
 uvicorn src.main:app --reload
 ```
 
----
-
-# API
-
-Current API structure:
+Open:
 
 ```txt
-/api/v1/
+http://127.0.0.1:8000/docs
 ```
 
-Planned endpoints:
-- /register
-- /login
-- /refresh
-- /me
-- /profile
-- /badges
-- /ranks
+## Run With Docker
 
----
+```bash
+docker compose up --build
+```
 
-# CI/CD
+The compose setup starts:
 
-GitHub Actions is used for:
-- lint checks
-- automated testing
-- validation
-- workflow automation
+- `app` on `http://127.0.0.1:8000`
+- `db` as PostgreSQL 16
 
----
+## Tests
 
-# Documentation
+```bash
+pytest
+```
 
-Future documentation plans:
+The test suite uses an isolated in-memory SQLite database and does not require PostgreSQL.
+
+## CI
+
+GitHub Actions runs the test suite automatically on pushes and pull requests to `main` and `develop`.
+
+## Database Migrations
+
+Apply migrations:
+
+```bash
+alembic upgrade head
+```
+
+Create a new migration after model changes:
+
+```bash
+alembic revision --autogenerate -m "describe change"
+```
+
+## Current API
 
 ```txt
-docs/
-├── blueprint.md
-├── architecture.md
-├── auth-flow.md
-├── database.md
-├── roadmap.md
-└── api-reference.md
+GET  /api/v1/health
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+GET  /api/v1/auth/me
+PATCH /api/v1/auth/me
+GET  /api/v1/users
+GET  /api/v1/users/{user_id}
+GET  /api/v1/admin/users
 ```
 
----
+`/api/v1/auth/login` returns an access token and a refresh token. Send the access token as:
 
-# Current Status
-
-Current project state:
-- Backend foundation established
-- Security layer initialized
-- Database architecture prepared
-- Authentication infrastructure in progress
-
-The project is still under active development.
-
----
-
-# Contributing
-
-Contributions, ideas, and feedback are welcome.
-
-Future contribution guidelines will be added as the project evolves.
-
----
-
-# License
-
-This project is licensed under the MIT License.
-
-See the LICENSE file for more information.
-
----
-
-# Author
-
-Created and maintained by Miransas.
+```txt
+Authorization: Bearer <access_token>
 ```
 
----
+Use the refresh token to request a new access token:
 
+```json
+{
+  "refresh_token": "<refresh_token>"
+}
+```
 
+## Rank Permissions
+
+Miransas ID has a first permission layer based on `rank`.
+
+- `Novice`, `Architect`, and `Elite` can use normal authenticated endpoints.
+- `Core Developer` can access admin endpoints such as `/api/v1/admin/users`.
+
+## Profile Update
+
+Authenticated users can update their profile fields:
+
+```json
+{
+  "full_name": "Miransas User",
+  "badges": ["founder", "beta_tester"]
+}
+```
+
+## Current Status
+
+The project now has a working authentication baseline: user registration, login, access and refresh tokens, token validation, protected user lookup, profile updates, rank-based admin permissions, Docker Compose support, Alembic migrations, tests, and health checks. Next planned steps include refresh token rotation and broader role management.

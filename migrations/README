@@ -1,0 +1,9 @@
+Alembic migrations for Miransas ID.
+
+Create a revision:
+
+    alembic revision --autogenerate -m "describe change"
+
+Apply migrations:
+
+    alembic upgrade head

@@ -8,3 +8,5 @@ pydantic-settings
 email-validator
 psycopg2-binary
 httpx
+pytest
+alembic

@@ -1,8 +1,10 @@
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
 from src.models.user import MiransasRank
 
-# Ortak alanlar
+
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -10,15 +12,19 @@ class UserBase(BaseModel):
     rank: MiransasRank = MiransasRank.NOVICE
     badges: List[str] = Field(default_factory=list)
 
-# Kayıt olurken (Input)
-class UserCreate(UserBase):
-    password: str
 
-# API'den kullanıcı dönerken (Output) - Şifre YOK!
+class UserCreate(UserBase):
+    password: str = Field(min_length=8)
+
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    badges: Optional[List[str]] = None
+
+
 class UserOut(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     is_active: bool
     is_verified: bool
-
-    class Config:
-        from_attributes = True # SQLModel objesini otomatik Pydantic'e çevirir

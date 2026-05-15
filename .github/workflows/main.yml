@@ -2,56 +2,34 @@ name: Miransas ID CI
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main", "develop"]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: miransas_id_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # requirements.txt yoksa hata vermemesi için kontrol ekledik
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install pytest httpx ruff
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
 
-    - name: Lint with Ruff (Check Only)
-      run: |
-        # --exit-zero sayesinde hata bulsa bile workflow devam eder (Yeşil yanar)
-        ruff check . --exit-zero
+      - name: Run tests
+        env:
+          SECRET_KEY: test-secret-key-only-for-ci
+          DATABASE_URL: sqlite:///./ci_test.db
+        run: python -m pytest -q
 
-    - name: Run Tests
-      env:
-        DATABASE_URL: postgresql://user:pass@localhost:5432/miransas_id_test
-        SECRET_KEY: "test-secret-key-only-for-ci"
-      run: |
-        # Test dosyası henüz yoksa hata vermemesi için:
-        python -m pytest || echo "No tests found yet, skipping..."
-
-    - name: Miransas Deployment Signal
-      run: echo "Build for Miransas ID Node-01 successful."
+      - name: Miransas deployment signal
+        run: echo "Miransas ID test suite passed."

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Column, JSON
 import enum
@@ -25,7 +25,7 @@ class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_login: Optional[datetime] = None
 
     # İleride binboi tünelleri veya chess maçları için link ekleyebiliriz
