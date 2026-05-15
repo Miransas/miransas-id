@@ -18,3 +18,4 @@ class RefreshTokenRequest(BaseModel):
 class TokenPayload(BaseModel):
     sub: Optional[str] = None
     type: Optional[str] = None
+    jti: Optional[str] = None

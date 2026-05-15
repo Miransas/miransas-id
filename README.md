@@ -112,6 +112,7 @@ GET  /api/v1/health
 POST /api/v1/auth/register
 POST /api/v1/auth/login
 POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
 GET  /api/v1/auth/me
 PATCH /api/v1/auth/me
 GET  /api/v1/users
@@ -125,13 +126,15 @@ GET  /api/v1/admin/users
 Authorization: Bearer <access_token>
 ```
 
-Use the refresh token to request a new access token:
+Use the refresh token to request a rotated token pair:
 
 ```json
 {
   "refresh_token": "<refresh_token>"
 }
 ```
+
+Refresh tokens are stored server-side as hashes. A successful refresh revokes the previous refresh token and returns a new one. `/api/v1/auth/logout` revokes a refresh token.
 
 ## Rank Permissions
 
@@ -153,4 +156,4 @@ Authenticated users can update their profile fields:
 
 ## Current Status
 
-The project now has a working authentication baseline: user registration, login, access and refresh tokens, token validation, protected user lookup, profile updates, rank-based admin permissions, Docker Compose support, Alembic migrations, tests, and health checks. Next planned steps include refresh token rotation and broader role management.
+The project now has a working authentication baseline: user registration, login, access tokens, refresh token rotation, logout revocation, protected user lookup, profile updates, rank-based admin permissions, Docker Compose support, Alembic migrations, tests, and health checks. Next planned steps include broader role management and public profiles.

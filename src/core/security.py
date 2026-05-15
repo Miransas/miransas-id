@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
 
@@ -13,9 +15,12 @@ def create_token(
     subject: Union[str, Any],
     token_type: str,
     expires_delta: timedelta,
+    token_id: str | None = None,
 ) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode = {"exp": expire, "sub": str(subject), "type": token_type}
+    if token_id is not None:
+        to_encode["jti"] = token_id
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -29,11 +34,12 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta | Non
     return create_token(subject, "access", token_expires_delta)
 
 
-def create_refresh_token(subject: Union[str, Any]) -> str:
+def create_refresh_token(subject: Union[str, Any], token_id: str | None = None) -> str:
     return create_token(
         subject,
         "refresh",
         timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
+        token_id=token_id,
     )
 
 
@@ -43,6 +49,14 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 def get_password_hash(password: str) -> str:
     return ph.hash(password)
+
+
+def create_token_id() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:

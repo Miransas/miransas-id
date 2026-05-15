@@ -1,11 +1,30 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
+from src.core.config import settings
 from src.models.user import User
+from src.models.session import UserSession
 from src.schemas.user import UserCreate
-from src.core.security import get_password_hash, verify_password
+from src.core.security import (
+    create_access_token,
+    create_refresh_token,
+    create_token_id,
+    get_password_hash,
+    hash_token,
+    verify_password,
+)
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+def as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 class AuthService:
@@ -52,8 +71,68 @@ class AuthService:
         if not user or not verify_password(password, user.hashed_password):
             return None
 
-        user.last_login = datetime.now(UTC)
+        user.last_login = utc_now()
         db.add(user)
         db.commit()
         db.refresh(user)
         return user
+
+    @staticmethod
+    def create_token_pair(db: Session, user: User) -> dict[str, str]:
+        refresh_token_id = create_token_id()
+        refresh_token = create_refresh_token(subject=user.id, token_id=refresh_token_id)
+        session = UserSession(
+            user_id=user.id,
+            refresh_token_hash=hash_token(refresh_token),
+            refresh_token_id=refresh_token_id,
+            expires_at=utc_now()
+            + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
+        )
+
+        db.add(session)
+        db.commit()
+
+        return {
+            "access_token": create_access_token(subject=user.id),
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
+
+    @staticmethod
+    def rotate_refresh_token(db: Session, user: User, refresh_token: str, token_id: str):
+        statement = select(UserSession).where(
+            UserSession.user_id == user.id,
+            UserSession.refresh_token_hash == hash_token(refresh_token),
+            UserSession.refresh_token_id == token_id,
+            UserSession.is_active == True,  # noqa: E712
+        )
+        session = db.exec(statement).first()
+
+        if session is None or as_utc(session.expires_at) <= utc_now():
+            return None
+
+        session.is_active = False
+        session.revoked_at = utc_now()
+        db.add(session)
+        db.commit()
+
+        return AuthService.create_token_pair(db, user)
+
+    @staticmethod
+    def revoke_refresh_token(db: Session, user: User, refresh_token: str, token_id: str) -> bool:
+        statement = select(UserSession).where(
+            UserSession.user_id == user.id,
+            UserSession.refresh_token_hash == hash_token(refresh_token),
+            UserSession.refresh_token_id == token_id,
+            UserSession.is_active == True,  # noqa: E712
+        )
+        session = db.exec(statement).first()
+
+        if session is None:
+            return False
+
+        session.is_active = False
+        session.revoked_at = utc_now()
+        db.add(session)
+        db.commit()
+        return True

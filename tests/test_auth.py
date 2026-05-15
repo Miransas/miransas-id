@@ -80,7 +80,26 @@ def test_refresh_returns_new_access_token(client):
     assert response.status_code == 200
     assert body["token_type"] == "bearer"
     assert body["access_token"]
-    assert "refresh_token" not in body
+    assert body["refresh_token"]
+    assert body["refresh_token"] != refresh_token
+
+
+def test_refresh_rotation_rejects_reused_refresh_token(client):
+    register_user(client)
+    login = login_user(client)
+    refresh_token = login.json()["refresh_token"]
+
+    first_refresh = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+    second_refresh = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+
+    assert first_refresh.status_code == 200
+    assert second_refresh.status_code == 401
 
 
 def test_refresh_rejects_access_token(client):
@@ -94,6 +113,24 @@ def test_refresh_rejects_access_token(client):
     )
 
     assert response.status_code == 401
+
+
+def test_logout_revokes_refresh_token(client):
+    register_user(client)
+    login = login_user(client)
+    refresh_token = login.json()["refresh_token"]
+
+    logout = client.post(
+        "/api/v1/auth/logout",
+        json={"refresh_token": refresh_token},
+    )
+    refresh = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+
+    assert logout.status_code == 204
+    assert refresh.status_code == 401
 
 
 def test_auth_me_requires_token(client):
