@@ -1,31 +1,18 @@
-from datetime import UTC, datetime
-from typing import Optional, List
-from sqlmodel import SQLModel, Field, Column, JSON
-import enum
+from datetime import datetime, timezone
+from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
-class MiransasRank(str, enum.Enum):
-    NOVICE = "Novice"
-    ARCHITECT = "Architect"
-    ELITE = "Elite"
-    CORE_DEV = "Core Developer"
+from src.database.session import Base
 
-class UserBase(SQLModel):
-    username: str = Field(index=True, unique=True, min_length=3, max_length=20)
-    email: str = Field(index=True, unique=True)
-    full_name: Optional[str] = None
-    is_active: bool = Field(default=True)
-    is_verified: bool = Field(default=False)
-    
-    # Miransas Ecosystem Data
-    rank: MiransasRank = Field(default=MiransasRank.NOVICE)
-    # JSON tipinde badge listesi: ["pull_shark", "early_adopter"]
-    badges: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+class User(Base):
+    __tablename__ = "users"
 
-class User(UserBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    hashed_password: str
-    
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    last_login: Optional[datetime] = None
-
-    # İleride binboi tünelleri veya chess maçları için link ekleyebiliriz
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default=lambda: datetime.now(timezone.utc)
+    )

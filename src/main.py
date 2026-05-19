@@ -1,37 +1,45 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from src import __app_name__, __version__
-from src.api import v1_router
+from src.api.v1.auth import router as auth_router
 from src.core.config import settings
-from src.database.session import init_db
+from src.database.session import Base, engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if app.state.init_database:
-        init_db()
+    # Uygulama başlarken asenkron motor üzerinden tabloları oluştur
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
 
 
-def create_app(init_database: bool = True) -> FastAPI:
+def create_app() -> FastAPI:
     application = FastAPI(
-        title=settings.PROJECT_NAME or __app_name__,
-        version=__version__,
+        title=settings.PROJECT_NAME,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         lifespan=lifespan,
     )
-    application.state.init_database = init_database
 
-    application.include_router(v1_router, prefix=settings.API_V1_STR)
+    # CORS Middleware entegrasyonu
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Auth router'ı uygulamaya bağlama
+    application.include_router(auth_router, prefix=settings.API_V1_STR)
 
     @application.get("/")
     def root():
         return {
             "status": "online",
-            "system": "Miransas ID Node-01",
-            "version": f"v{__version__}",
+            "system": "Miransas ID Async Node",
         }
 
     return application

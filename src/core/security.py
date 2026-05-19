@@ -1,65 +1,49 @@
-import hashlib
-import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union
+from typing import Any, Dict, Optional
 
-from jose import jwt
-from argon2 import PasswordHasher
+from fastapi import HTTPException, status
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 from src.core.config import settings
 
-ph = PasswordHasher()
-
-
-def create_token(
-    subject: Union[str, Any],
-    token_type: str,
-    expires_delta: timedelta,
-    token_id: str | None = None,
-) -> str:
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode = {"exp": expire, "sub": str(subject), "type": token_type}
-    if token_id is not None:
-        to_encode["jti"] = token_id
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-
-def create_access_token(subject: Union[str, Any], expires_delta: timedelta | None = None) -> str:
-    if expires_delta:
-        token_expires_delta = expires_delta
-    else:
-        token_expires_delta = timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-    return create_token(subject, "access", token_expires_delta)
-
-
-def create_refresh_token(subject: Union[str, Any], token_id: str | None = None) -> str:
-    return create_token(
-        subject,
-        "refresh",
-        timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
-        token_id=token_id,
-    )
-
-
-def decode_access_token(token: str) -> dict[str, Any]:
-    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
-    return ph.hash(password)
-
-
-def create_token_id() -> str:
-    return secrets.token_urlsafe(32)
-
-
-def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def create_refresh_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def decode_token(token: str) -> str:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        return ph.verify(hashed_password, plain_password)
-    except Exception:
-        return False
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        subject: Optional[str] = payload.get("sub")
+        if subject is None:
+            raise credentials_exception
+        return str(subject)
+    except JWTError:
+        raise credentials_exception
