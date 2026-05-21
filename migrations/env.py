@@ -16,7 +16,11 @@ target_metadata = SQLModel.metadata
 
 
 def get_url() -> str:
-    return settings.DATABASE_URL
+    # Alembic runs synchronously; strip async driver prefixes.
+    url = settings.DATABASE_URL
+    url = url.replace("sqlite+aiosqlite://", "sqlite://")
+    url = url.replace("postgresql+asyncpg://", "postgresql://")
+    return url
 
 
 def run_migrations_offline() -> None:

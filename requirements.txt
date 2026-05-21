@@ -13,4 +13,5 @@ httpx
 pytest
 pytest-asyncio
 alembic
+greenlet
 ruff
