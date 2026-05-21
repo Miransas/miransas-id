@@ -2,11 +2,15 @@ fastapi
 uvicorn[standard]
 sqlmodel
 argon2-cffi
+passlib[argon2]
 python-jose[cryptography]
 python-multipart
 pydantic-settings
 email-validator
-psycopg2-binary
+aiosqlite
+asyncpg
 httpx
 pytest
+pytest-asyncio
 alembic
+ruff

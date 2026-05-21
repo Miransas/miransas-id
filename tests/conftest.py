@@ -1,29 +1,38 @@
 import pytest
-from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import SQLModel
 
-from src.database.session import get_session
+import src.models  # noqa: F401 — register User and UserSession tables
+from src.database.session import get_db
 from src.main import create_app
 
 
-@pytest.fixture(name="client")
-def client_fixture():
+@pytest.fixture
+async def client():
     app = create_app(init_database=False)
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
+
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
         poolclass=StaticPool,
     )
-    SQLModel.metadata.create_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
 
-    def get_test_session():
-        with Session(engine) as session:
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async def override_get_db():
+        async with session_factory() as session:
             yield session
 
-    app.dependency_overrides[get_session] = get_test_session
+    app.dependency_overrides[get_db] = override_get_db
 
-    with TestClient(app) as client:
-        yield client
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
+
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+    await engine.dispose()
 
     app.dependency_overrides.clear()

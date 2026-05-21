@@ -1,38 +1,35 @@
 # Miransas ID
 
-Miransas ID is a FastAPI based identity and authentication service for the Miransas ecosystem. It provides a foundation for shared accounts, JWT authentication, ranks, badges, and future product integrations.
+Miransas ID is a FastAPI-based identity and authentication service for the Miransas ecosystem. It provides a foundation for shared accounts, JWT authentication, ranks, badges, and future product integrations.
 
 ## Features
 
-- FastAPI application structure
-- Versioned API under `/api/v1`
-- SQLModel database models
-- Argon2 password hashing
-- JWT access tokens
-- Protected current-user endpoints
-- Rank and badge fields on user accounts
-- SQLite fallback for local development
-- PostgreSQL support through `DATABASE_URL`
+- FastAPI application with versioned API under `/api/v1`
+- SQLModel async ORM (SQLite in development, PostgreSQL in production)
+- Argon2id password hashing via `passlib[argon2]`
+- JWT access tokens (HS256)
+- Rank and badge fields on user accounts (`Novice`, `Architect`, `Elite`, `Core Developer`)
+- Alembic migrations
 
 ## Project Structure
 
-```txt
+```
 src/
 ├── api/
 │   ├── deps.py
 │   └── v1/
 │       ├── auth.py
-│       ├── health.py
-│       └── users.py
+│       └── health.py
 ├── core/
 │   ├── config.py
 │   └── security.py
 ├── database/
 │   └── session.py
 ├── models/
+│   ├── session.py
 │   └── user.py
 ├── schemas/
-│   ├── token.py
+│   ├── auth.py
 │   └── user.py
 ├── services/
 │   └── auth_service.py
@@ -47,14 +44,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file for production-like settings:
+Copy the example env and adjust for your environment:
 
-```env
-SECRET_KEY=change-this-secret
-DATABASE_URL=postgresql://user:password@localhost:5432/miransas_id
+```bash
+cp .env.example .env
 ```
 
-For local experiments, the app can run without `.env`; it falls back to SQLite.
+For local development, the app runs without `.env` and falls back to SQLite automatically.
 
 ## Run
 
@@ -64,7 +60,7 @@ uvicorn src.main:app --reload
 
 Open:
 
-```txt
+```
 http://127.0.0.1:8000/docs
 ```
 
@@ -82,14 +78,10 @@ The compose setup starts:
 ## Tests
 
 ```bash
-pytest
+pytest -q
 ```
 
 The test suite uses an isolated in-memory SQLite database and does not require PostgreSQL.
-
-## CI
-
-GitHub Actions runs the test suite automatically on pushes and pull requests to `main` and `develop`.
 
 ## Database Migrations
 
@@ -107,53 +99,53 @@ alembic revision --autogenerate -m "describe change"
 
 ## Current API
 
-```txt
+```
 GET  /api/v1/health
 POST /api/v1/auth/register
 POST /api/v1/auth/login
-POST /api/v1/auth/refresh
-POST /api/v1/auth/logout
 GET  /api/v1/auth/me
-PATCH /api/v1/auth/me
-GET  /api/v1/users
-GET  /api/v1/users/{user_id}
-GET  /api/v1/admin/users
 ```
 
-`/api/v1/auth/login` returns an access token and a refresh token. Send the access token as:
+### Register
 
-```txt
+```json
+POST /api/v1/auth/register
+{
+  "username": "sardor",
+  "email": "sardor@example.com",
+  "password": "Secret123",
+  "full_name": "Sardor"
+}
+```
+
+Returns the created user (201).
+
+### Login
+
+```json
+POST /api/v1/auth/login
+{
+  "username_or_email": "sardor",
+  "password": "Secret123"
+}
+```
+
+Returns `{"access_token": "...", "token_type": "bearer"}`.
+
+### Protected endpoints
+
+Send the access token as:
+
+```
 Authorization: Bearer <access_token>
 ```
 
-Use the refresh token to request a rotated token pair:
-
-```json
-{
-  "refresh_token": "<refresh_token>"
-}
-```
-
-Refresh tokens are stored server-side as hashes. A successful refresh revokes the previous refresh token and returns a new one. `/api/v1/auth/logout` revokes a refresh token.
-
-## Rank Permissions
-
-Miransas ID has a first permission layer based on `rank`.
-
-- `Novice`, `Architect`, and `Elite` can use normal authenticated endpoints.
-- `Core Developer` can access admin endpoints such as `/api/v1/admin/users`.
-
-## Profile Update
-
-Authenticated users can update their profile fields:
-
-```json
-{
-  "full_name": "Miransas User",
-  "badges": ["founder", "beta_tester"]
-}
-```
+`GET /api/v1/auth/me` returns the currently authenticated user.
 
 ## Current Status
 
-The project now has a working authentication baseline: user registration, login, access tokens, refresh token rotation, logout revocation, protected user lookup, profile updates, rank-based admin permissions, Docker Compose support, Alembic migrations, tests, and health checks. Next planned steps include broader role management and public profiles.
+FAZ-1 Bölüm 1 complete. Working endpoints: register, login, `/me`. Single async stack (SQLModel + AsyncSession + Argon2 + JWT HS256).
+
+Planned for upcoming sections:
+- Bölüm 2: refresh token rotation, server-side session revocation, logout
+- Bölüm 3: profile update (`PATCH /auth/me`), user listing, rank-based admin endpoints
