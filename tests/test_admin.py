@@ -377,3 +377,52 @@ async def test_audit_log_does_not_record_no_op(
     result = await db.execute(select(AuditLog))
     entries = result.scalars().all()
     assert len(entries) == 0
+
+
+# ── Atomicity ──────────────────────────────────────────────────────────────────
+
+async def test_admin_disable_atomicity(
+    db: AsyncSession, core_dev: User, regular_user: User
+) -> None:
+    """Session revoke and field update must be part of the same transaction.
+
+    We verify this by calling revoke_all_user_sessions(auto_commit=False) and
+    then rolling back explicitly. Both the session status and the user field
+    must revert — confirming they were never committed as separate operations.
+    """
+    from sqlalchemy import select as sa_select
+
+    from src.models.session import UserSession
+    from src.services.session_service import SessionService
+
+    # Capture IDs before any transaction manipulation to avoid lazy-load after rollback.
+    user_id = regular_user.id
+
+    _, session = await SessionService.create_session(
+        db, regular_user, user_agent="test", ip_address="1.1.1.1"
+    )
+    session_id = session.id
+    assert session.is_active is True
+
+    # Revoke without committing — simulates being inside a larger transaction.
+    await SessionService.revoke_all_user_sessions(db, user_id, auto_commit=False)
+
+    # Mutate user field (also not committed).
+    await db.execute(
+        sa_select(User).where(User.id == user_id)  # ensure object is in session
+    )
+    from sqlalchemy import update as sa_update
+    await db.execute(sa_update(User).where(User.id == user_id).values(is_active=False))
+
+    # Roll back the whole transaction — neither change should persist.
+    await db.rollback()
+
+    result = await db.execute(sa_select(User).where(User.id == user_id))
+    refreshed_user = result.scalars().first()
+    assert refreshed_user is not None
+    assert refreshed_user.is_active is True, "is_active must have reverted after rollback"
+
+    result = await db.execute(sa_select(UserSession).where(UserSession.id == session_id))
+    refreshed_session = result.scalars().first()
+    assert refreshed_session is not None
+    assert refreshed_session.is_active is True, "session revoke must have reverted after rollback"

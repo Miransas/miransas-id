@@ -25,6 +25,19 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["*"]
     DATABASE_URL: str = "sqlite+aiosqlite:///./miransas_id.db"
 
+    REDIS_URL: str = "redis://localhost:6379/0"
+    RATE_LIMIT_ENABLED: bool = True
+
+    # Email
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "onboarding@resend.dev"
+    EMAIL_FROM_NAME: str = "Miransas ID"
+    APP_FRONTEND_URL: str = "http://localhost:3000"
+
+    # Token TTLs
+    EMAIL_VERIFICATION_TTL_SECONDS: int = 24 * 60 * 60  # 24 hours
+    PASSWORD_RESET_TTL_SECONDS: int = 60 * 60  # 1 hour
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -44,6 +57,18 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "CORS_ORIGINS must not contain '*' in production. "
                     "Set an explicit list of allowed origins."
+                )
+            if not self.RESEND_API_KEY:
+                raise ValueError(
+                    "RESEND_API_KEY must be set in production."
+                )
+            if "@resend.dev" in self.EMAIL_FROM:
+                raise ValueError(
+                    "EMAIL_FROM must use a verified domain in production, not @resend.dev."
+                )
+            if "localhost" in self.APP_FRONTEND_URL:
+                raise ValueError(
+                    "APP_FRONTEND_URL must not be localhost in production."
                 )
         return self
 

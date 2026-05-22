@@ -102,17 +102,18 @@ class AdminService:
         if not audit_entries:
             return target  # nothing to do
 
+        # Perform session revoke inside the same transaction so the entire
+        # operation (field update + audit entries + session revocation) is atomic.
+        if was_disabled:
+            await SessionService.revoke_all_user_sessions(
+                db, target.id, reason=SessionRevocationReason.ADMIN_DISABLE, auto_commit=False
+            )
+
         db.add(target)
         for entry in audit_entries:
             db.add(entry)
         await db.commit()
         await db.refresh(target)
-
-        # Revoke all sessions immediately when a user is disabled.
-        if was_disabled:
-            await SessionService.revoke_all_user_sessions(
-                db, target.id, reason=SessionRevocationReason.ADMIN_DISABLE
-            )
 
         return target
 

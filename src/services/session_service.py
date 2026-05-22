@@ -215,8 +215,13 @@ class SessionService:
         db: AsyncSession,
         user_id: int,
         reason: str = SessionRevocationReason.LOGOUT_ALL,
+        auto_commit: bool = True,
     ) -> int:
-        """Revokes all active sessions for a user. Returns the number of sessions revoked."""
+        """Revokes all active sessions for a user. Returns the number of sessions revoked.
+
+        Pass auto_commit=False when the caller manages its own transaction
+        (e.g. AdminService needs session revoke + audit log in one atomic commit).
+        """
         result = await db.execute(
             update(UserSession)
             .where(
@@ -229,7 +234,8 @@ class SessionService:
                 revocation_reason=reason,
             )
         )
-        await db.commit()
+        if auto_commit:
+            await db.commit()
         return result.rowcount
 
     @staticmethod

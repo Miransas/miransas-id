@@ -4,6 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
+from src.core.password_policy import validate_password_strength
 from src.models.user import MiransasRank
 
 _USERNAME_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -12,15 +13,6 @@ _RESERVED_USERNAMES = frozenset([
     "admin", "root", "system", "miransas", "api", "auth",
     "support", "null", "undefined", "anonymous",
 ])
-
-_COMMON_PASSWORDS = frozenset([
-    "password", "password1", "12345678", "123456789", "qwerty",
-    "admin", "letmein", "welcome", "monkey", "dragon", "master",
-    "login", "hello", "iloveyou", "sunshine", "princess", "abc123",
-    "111111", "mustang",
-])
-
-_SPECIAL_CHARS = frozenset("!@#$%^&*()_+-=[]{}|;':\",./<>?~`")
 
 
 class UserBase(BaseModel):
@@ -37,6 +29,11 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=12)
     full_name: Optional[str] = None
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: EmailStr) -> str:
+        return str(v).lower()
+
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
@@ -50,21 +47,8 @@ class UserCreate(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def validate_password_strength(cls, v: str) -> str:
-        issues: list[str] = []
-        if not any(c.isdigit() for c in v):
-            issues.append("at least one digit")
-        if not any(c.isupper() for c in v):
-            issues.append("at least one uppercase letter")
-        if not any(c.islower() for c in v):
-            issues.append("at least one lowercase letter")
-        if not any(c in _SPECIAL_CHARS for c in v):
-            issues.append("at least one special character (!@#$%^&* …)")
-        if v.lower() in _COMMON_PASSWORDS:
-            issues.append("must not be a commonly used password")
-        if issues:
-            raise ValueError("Password requires: " + ", ".join(issues) + ".")
-        return v
+    def _validate_password(cls, v: str) -> str:
+        return validate_password_strength(v)
 
     @model_validator(mode="after")
     def validate_password_no_personal_info(self) -> "UserCreate":

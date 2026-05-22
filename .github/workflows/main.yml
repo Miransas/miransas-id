@@ -10,14 +10,30 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
 
       - name: Install dependencies
@@ -27,9 +43,17 @@ jobs:
 
       - name: Run tests
         env:
-          SECRET_KEY: test-secret-key-only-for-ci
-          DATABASE_URL: sqlite:///./ci_test.db
+          ENVIRONMENT: development
+          SECRET_KEY: test-secret-key-only-for-ci-do-not-use-in-production
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+          REDIS_URL: redis://localhost:6379/0
+          RESEND_API_KEY: ""
+          EMAIL_FROM: test@example.com
+          EMAIL_FROM_NAME: Miransas ID CI
+          APP_FRONTEND_URL: http://localhost:3000
+          RATE_LIMIT_ENABLED: "true"
         run: python -m pytest -q
 
       - name: Miransas deployment signal
-        run: echo "Miransas ID test suite passed."
+        if: success()
+        run: echo "Miransas ID test suite passed on Python ${{ matrix.python-version }}."

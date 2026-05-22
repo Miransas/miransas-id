@@ -5,6 +5,7 @@ class SessionRevocationReason:
     ROTATED = "rotated"
     EXPIRED = "expired"
     ADMIN_DISABLE = "admin_disable"
+    PASSWORD_RESET = "password_reset"
 
 
 class AuditAction:
@@ -12,3 +13,11 @@ class AuditAction:
     BADGES_UPDATED = "BADGES_UPDATED"
     USER_DISABLED = "USER_DISABLED"
     USER_ENABLED = "USER_ENABLED"
+    LOCKOUT_CLEARED = "LOCKOUT_CLEARED"
+    EMAIL_VERIFIED = "EMAIL_VERIFIED"
+    PASSWORD_RESET_REQUESTED = "PASSWORD_RESET_REQUESTED"
+    PASSWORD_RESET_COMPLETED = "PASSWORD_RESET_COMPLETED"
+
+
+TOKEN_TYPE_EMAIL_VERIFY = "email_verify"
+TOKEN_TYPE_PASSWORD_RESET = "password_reset"

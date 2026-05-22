@@ -15,3 +15,6 @@ pytest-asyncio
 alembic
 greenlet
 ruff
+redis>=5.0
+fakeredis>=2.20
+resend>=2.0

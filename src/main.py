@@ -8,6 +8,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from src.api.v1 import api_router
 from src.core.config import settings
+from src.core.redis_client import close_redis
 from src.database.session import engine
 
 _DEFAULT_SECRET = "change_me_in_production_environment"
@@ -58,6 +59,7 @@ def create_app(init_database: bool = True) -> FastAPI:
             async with engine.begin() as conn:
                 await conn.run_sync(SQLModel.metadata.create_all)
         yield
+        await close_redis()
 
     application = FastAPI(
         title=settings.PROJECT_NAME,
