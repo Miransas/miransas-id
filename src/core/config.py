@@ -1,3 +1,4 @@
+import warnings
 from typing import List, Literal
 
 from pydantic import model_validator
@@ -38,6 +39,12 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_TTL_SECONDS: int = 24 * 60 * 60  # 24 hours
     PASSWORD_RESET_TTL_SECONDS: int = 60 * 60  # 1 hour
 
+    # Sentry
+    SENTRY_DSN: str = ""
+    SENTRY_ENVIRONMENT: str = ""  # defaults to ENVIRONMENT when empty
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1
+    SENTRY_PROFILES_SAMPLE_RATE: float = 0.1
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -69,6 +76,12 @@ class Settings(BaseSettings):
             if "localhost" in self.APP_FRONTEND_URL:
                 raise ValueError(
                     "APP_FRONTEND_URL must not be localhost in production."
+                )
+            if not self.SENTRY_DSN:
+                warnings.warn(
+                    "SENTRY_DSN is not set in production. "
+                    "Error tracking will be disabled.",
+                    stacklevel=2,
                 )
         return self
 

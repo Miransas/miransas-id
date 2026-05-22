@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main", "develop"]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -40,11 +43,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install pytest-cov
 
-      - name: Run tests
+      - name: Lint with ruff (if installed)
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check src/ tests/ || true
+
+      - name: Run tests with coverage
         env:
           ENVIRONMENT: development
-          SECRET_KEY: test-secret-key-only-for-ci-do-not-use-in-production
+          SECRET_KEY: test-secret-key-only-for-ci-do-not-use-in-production-32chars
           DATABASE_URL: "sqlite+aiosqlite:///:memory:"
           REDIS_URL: redis://localhost:6379/0
           RESEND_API_KEY: ""
@@ -52,8 +62,49 @@ jobs:
           EMAIL_FROM_NAME: Miransas ID CI
           APP_FRONTEND_URL: http://localhost:3000
           RATE_LIMIT_ENABLED: "true"
-        run: python -m pytest -q
+        run: |
+          pytest -q --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=80
 
-      - name: Miransas deployment signal
-        if: success()
-        run: echo "Miransas ID test suite passed on Python ${{ matrix.python-version }}."
+      - name: Upload coverage to artifact
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies for known vulnerabilities
+        run: pip-audit -r requirements.txt --strict || true
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: miransas-id:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

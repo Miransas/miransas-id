@@ -8,6 +8,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from src.api.v1 import api_router
 from src.core.config import settings
+from src.core.observability import setup_logging, setup_sentry
 from src.core.redis_client import close_redis
 from src.database.session import engine
 
@@ -46,6 +47,9 @@ class _SecurityHeadersMiddleware:
 
 
 def create_app(init_database: bool = True) -> FastAPI:
+    setup_logging()
+    setup_sentry()
+
     @asynccontextmanager
     async def _lifespan(app: FastAPI):
         # Belt-and-suspenders: Settings validator in config.py rejects these at import time.
