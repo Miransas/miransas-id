@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -23,5 +23,11 @@ class User(SQLModel, table=True):
     is_verified: bool = Field(default=False)
     rank: MiransasRank = Field(default=MiransasRank.NOVICE)
     badges: list = Field(default_factory=list, sa_column=Column(JSON, nullable=True))
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    last_login: Optional[datetime] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    last_login: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )

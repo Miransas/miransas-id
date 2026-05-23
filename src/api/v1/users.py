@@ -1,10 +1,16 @@
 from fastapi import APIRouter, HTTPException, status
 
 from src.api.deps import CurrentUser, DbSession
-from src.schemas.user import PublicUserOut
+from src.schemas.user import PublicUserOut, UserOut
 from src.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+@router.get("/me", response_model=UserOut)
+async def get_current_user_me(user: CurrentUser) -> UserOut:
+    """Get current authenticated user's full profile."""
+    return user
 
 
 @router.get("", response_model=list[PublicUserOut])

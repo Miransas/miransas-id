@@ -171,7 +171,7 @@ class SessionService:
         session.replaced_by_session_id = new_session.id
         await db.commit()
 
-        return create_access_token(subject=user.id), new_refresh_token
+        return create_access_token(subject=user.id, rank=user.rank.value), new_refresh_token
 
     @staticmethod
     async def revoke_session(

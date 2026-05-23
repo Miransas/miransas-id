@@ -41,11 +41,16 @@ def safe_compare(a: str, b: str) -> bool:
     return secrets.compare_digest(a.encode(), b.encode())
 
 
-def create_access_token(subject: str | int, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: str | int,
+    rank: str,
+    expires_delta: timedelta | None = None,
+) -> str:
     now = datetime.now(timezone.utc)
     expire = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     payload = {
         "sub": str(subject),
+        "rank": rank,
         "iat": now,
         "nbf": now,
         "exp": expire,

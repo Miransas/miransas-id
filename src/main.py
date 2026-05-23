@@ -58,7 +58,7 @@ def create_app(init_database: bool = True) -> FastAPI:
                 raise RuntimeError(
                     "Production startup aborted: unsafe default configuration detected."
                 )
-        if init_database:
+        if init_database and settings.ENVIRONMENT in ("development", "test"):
             import src.models  # noqa: F401 — register all SQLModel table classes
             async with engine.begin() as conn:
                 await conn.run_sync(SQLModel.metadata.create_all)

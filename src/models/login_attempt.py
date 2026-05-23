@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from typing import Optional
 
+from sqlalchemy import Column, DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -16,5 +17,5 @@ class LoginAttempt(SQLModel, table=True):
     failure_reason: Optional[str] = Field(default=None, max_length=50)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        index=True,
+        sa_column=Column(DateTime(timezone=True), nullable=False, index=True),
     )

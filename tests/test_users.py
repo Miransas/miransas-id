@@ -147,3 +147,42 @@ async def test_get_user_no_pii(client: AsyncClient) -> None:
     assert "email" not in body
     assert "last_login" not in body
     assert "created_at" not in body
+
+
+# ── GET /users/me ──────────────────────────────────────────────────────────────
+
+async def test_get_me_authenticated_returns_user(client: AsyncClient) -> None:
+    await _register(client)
+    token = (await _login(client))["access_token"]
+
+    resp = await client.get("/api/v1/users/me", headers=_auth(token))
+    assert resp.status_code == 200
+    assert resp.json()["username"] == _USERNAME
+
+
+async def test_get_me_unauthenticated_returns_401(client: AsyncClient) -> None:
+    resp = await client.get("/api/v1/users/me")
+    assert resp.status_code == 401
+
+
+async def test_get_me_includes_email(client: AsyncClient) -> None:
+    await _register(client)
+    token = (await _login(client))["access_token"]
+
+    resp = await client.get("/api/v1/users/me", headers=_auth(token))
+    body = resp.json()
+    assert "email" in body
+    assert body["email"] == _EMAIL
+
+
+async def test_get_me_does_not_collide_with_user_id_route(client: AsyncClient) -> None:
+    await _register(client)
+    token = (await _login(client))["access_token"]
+
+    me_resp = await client.get("/api/v1/users/me", headers=_auth(token))
+    assert me_resp.status_code == 200
+
+    user_id = me_resp.json()["id"]
+    id_resp = await client.get(f"/api/v1/users/{user_id}", headers=_auth(token))
+    assert id_resp.status_code == 200
+    assert id_resp.json()["username"] == _USERNAME

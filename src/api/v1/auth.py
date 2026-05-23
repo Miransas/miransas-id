@@ -86,7 +86,7 @@ async def login(user_in: UserLogin, request: Request, db: DbSession) -> TokenPai
         ip_address=ip,
     )
     return TokenPairResponse(
-        access_token=create_access_token(subject=user.id),
+        access_token=create_access_token(subject=user.id, rank=user.rank.value),
         refresh_token=refresh_token,
     )
 
