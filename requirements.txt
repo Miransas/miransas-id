@@ -15,7 +15,7 @@ pytest-cov
 python-jose[cryptography]
 python-multipart
 redis>=8.0.0
-resend>=2.30.1
+resend>=2.32.2
 ruff
 sentry-sdk[fastapi]>=2.62.0
 sqlmodel
