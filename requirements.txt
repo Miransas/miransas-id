@@ -17,6 +17,6 @@ python-multipart
 redis>=8.0.0
 resend>=2.32.2
 ruff
-sentry-sdk[fastapi]>=2.62.0
+sentry-sdk[fastapi]>=2.63.0
 sqlmodel
 uvicorn[standard]
