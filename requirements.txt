@@ -14,7 +14,7 @@ pytest-asyncio
 pytest-cov
 python-jose[cryptography]
 python-multipart
-redis>=8.0.0
+redis>=8.0.1
 resend>=2.32.2
 ruff
 sentry-sdk[fastapi]>=2.63.0
