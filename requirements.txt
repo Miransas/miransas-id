@@ -3,7 +3,7 @@ alembic
 argon2-cffi
 asyncpg
 email-validator
-fakeredis>=2.37.1
+fakeredis>=2.38.0
 fastapi
 greenlet
 httpx
