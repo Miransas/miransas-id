@@ -1,0 +1,34 @@
+[package]
+name = "miransas-id"
+version = "0.1.0"
+edition = "2024"
+
+
+[dependencies]
+# Web Framework & Async Runtime
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1.0", features = ["full"] }
+
+# Serialization & JSON
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Static Assets & Middleware
+tower-http = { version = "0.5", features = ["fs", "trace", "cors"] }
+
+# Template Engine (HTML Render)
+askama = "0.12"
+
+# Database & Migration (PostgreSQL)
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono"] }
+
+# Cryptography & Tokens
+argon2 = "0.5"
+jsonwebtoken = "9.2"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration & Logging
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

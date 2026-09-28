@@ -20,3 +20,17 @@ build/
 *.whl
 coverage/
 .secreta
+
+
+# Added by cargo
+
+/target
+
+**/*.rs.bk
+
+# Environment Variables (Burası çok önemli!)
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
